@@ -1,6 +1,25 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [message, setMessage] = useState("");
+
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!email || !password) {
+      setMessage("Email and password are required.");
+      return;
+    }
+    localStorage.setItem("pm_user", email);
+    router.push("/vault");
+  };
+
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-12 px-6 py-12">
@@ -21,11 +40,13 @@ export default function LoginPage() {
               Access your vault, monitor security alerts, and manage team access.
             </p>
 
-            <form className="mt-8 grid gap-4">
+            <form className="mt-8 grid gap-4" onSubmit={handleSubmit}>
               <label className="grid gap-2 text-sm text-zinc-300">
                 Work email
                 <input
                   type="email"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
                   placeholder="you@company.com"
                   className="rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white placeholder:text-zinc-500"
                 />
@@ -34,6 +55,8 @@ export default function LoginPage() {
                 Master password
                 <input
                   type="password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
                   placeholder="••••••••"
                   className="rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white placeholder:text-zinc-500"
                 />
@@ -48,6 +71,7 @@ export default function LoginPage() {
                 </label>
                 <button className="text-emerald-300 hover:text-emerald-200">Forgot password?</button>
               </div>
+              {message ? <p className="text-xs text-rose-300">{message}</p> : null}
             </form>
           </div>
 

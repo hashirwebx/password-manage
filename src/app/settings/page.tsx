@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import AppShell from "@/components/AppShell";
 
 const alerts = [
@@ -7,6 +10,30 @@ const alerts = [
 ];
 
 export default function SettingsPage() {
+  const [emailAlerts, setEmailAlerts] = useState(true);
+  const [slackDigest, setSlackDigest] = useState(true);
+  const [weeklySummary, setWeeklySummary] = useState(true);
+  const [notice, setNotice] = useState("");
+
+  useEffect(() => {
+    const stored = localStorage.getItem("pm_settings");
+    if (!stored) {
+      return;
+    }
+    const parsed = JSON.parse(stored);
+    setEmailAlerts(Boolean(parsed.emailAlerts));
+    setSlackDigest(Boolean(parsed.slackDigest));
+    setWeeklySummary(Boolean(parsed.weeklySummary));
+  }, []);
+
+  const savePreferences = () => {
+    localStorage.setItem(
+      "pm_settings",
+      JSON.stringify({ emailAlerts, slackDigest, weeklySummary })
+    );
+    setNotice("Preferences saved.");
+  };
+
   return (
     <AppShell
       title="Security Settings"
@@ -70,8 +97,17 @@ export default function SettingsPage() {
                 <span className="text-zinc-400">Today</span>
               </div>
             </div>
-            <button className="mt-5 w-full rounded-2xl border border-white/10 px-4 py-2 text-sm text-white/80">
-              Manage account
+            <button
+              onClick={() => setNotice("Checklist opened.")}
+              className="mt-6 w-full rounded-2xl border border-white/10 px-4 py-2 text-sm text-white/80"
+            >
+              Review actions
+            </button>
+            <button
+              onClick={() => setNotice("Account settings opened.")}
+              className="mt-3 w-full rounded-2xl border border-white/10 px-4 py-2 text-sm text-white/80"
+            >
+              Update profile
             </button>
           </div>
           <div className="rounded-3xl border border-white/10 bg-zinc-900/60 p-6">
@@ -90,7 +126,10 @@ export default function SettingsPage() {
                 </div>
               ))}
             </div>
-            <button className="mt-5 w-full rounded-2xl border border-white/10 px-4 py-2 text-sm text-white/80">
+            <button
+              onClick={() => setNotice("Invite sent.")}
+              className="mt-5 w-full rounded-2xl border border-white/10 px-4 py-2 text-sm text-white/80"
+            >
               Invite member
             </button>
           </div>
@@ -100,23 +139,41 @@ export default function SettingsPage() {
               Control where security alerts are delivered.
             </p>
             <div className="mt-4 space-y-3 text-sm text-zinc-300">
-              {[
-                "Email alerts",
-                "Slack digest",
-                "Weekly health summary",
-              ].map((item) => (
-                <label
-                  key={item}
-                  className="flex items-center justify-between rounded-2xl border border-white/10 bg-black/30 px-4 py-3"
-                >
-                  <span>{item}</span>
-                  <input type="checkbox" defaultChecked className="h-4 w-4 rounded border-white/20" />
-                </label>
-              ))}
+              <label className="flex items-center justify-between rounded-2xl border border-white/10 bg-black/30 px-4 py-3">
+                <span>Email alerts</span>
+                <input
+                  type="checkbox"
+                  checked={emailAlerts}
+                  onChange={() => setEmailAlerts(!emailAlerts)}
+                  className="h-4 w-4 rounded border-white/20"
+                />
+              </label>
+              <label className="flex items-center justify-between rounded-2xl border border-white/10 bg-black/30 px-4 py-3">
+                <span>Slack digest</span>
+                <input
+                  type="checkbox"
+                  checked={slackDigest}
+                  onChange={() => setSlackDigest(!slackDigest)}
+                  className="h-4 w-4 rounded border-white/20"
+                />
+              </label>
+              <label className="flex items-center justify-between rounded-2xl border border-white/10 bg-black/30 px-4 py-3">
+                <span>Weekly health summary</span>
+                <input
+                  type="checkbox"
+                  checked={weeklySummary}
+                  onChange={() => setWeeklySummary(!weeklySummary)}
+                  className="h-4 w-4 rounded border-white/20"
+                />
+              </label>
             </div>
-            <button className="mt-5 w-full rounded-2xl border border-white/10 px-4 py-2 text-sm text-white/80">
+            <button
+              onClick={savePreferences}
+              className="mt-5 w-full rounded-2xl border border-white/10 px-4 py-2 text-sm text-white/80"
+            >
               Save notification prefs
             </button>
+            {notice ? <p className="mt-2 text-xs text-zinc-400">{notice}</p> : null}
           </div>
           <div className="rounded-3xl border border-white/10 bg-zinc-900/60 p-6">
             <h3 className="text-lg font-semibold">Security alerts</h3>
@@ -144,7 +201,10 @@ export default function SettingsPage() {
             <p className="mt-2 text-sm text-emerald-100/80">
               Keys are generated locally and never stored in plaintext.
             </p>
-            <button className="mt-5 w-full rounded-2xl bg-emerald-400 px-4 py-2 text-sm font-semibold text-emerald-950">
+            <button
+              onClick={() => setNotice("Encryption logs opened.")}
+              className="mt-5 w-full rounded-2xl bg-emerald-400 px-4 py-2 text-sm font-semibold text-emerald-950"
+            >
               View encryption logs
             </button>
           </div>

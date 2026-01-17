@@ -1,5 +1,10 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
 import AppShell from "@/components/AppShell";
+import { generatePassword } from "@/lib/password";
 
 const access = [
   { name: "Security team", role: "Edit", status: "Active" },
@@ -7,11 +12,92 @@ const access = [
   { name: "Ops", role: "Rotate", status: "Pending" },
 ];
 
+type Entry = {
+  _id: string;
+  name: string;
+  username: string;
+  password: string;
+  url?: string;
+  notes?: string;
+  status?: string;
+  risk?: string;
+  updatedAt?: string;
+};
+
+const statusStyles: Record<string, string> = {
+  Healthy: "border-emerald-500/20 bg-emerald-500/10 text-emerald-300",
+  Rotate: "border-amber-500/20 bg-amber-500/10 text-amber-300",
+  Locked: "border-rose-500/20 bg-rose-500/10 text-rose-300",
+};
+
 export default function VaultEntryDetailPage() {
+  const { id } = useParams<{ id: string }>();
+  const router = useRouter();
+  const [entry, setEntry] = useState<Entry | null>(null);
+  const [message, setMessage] = useState("");
+
+  const loadEntry = async () => {
+    try {
+      const response = await fetch(`/api/entries?id=${id}`);
+      const data = await response.json();
+      setEntry(data);
+    } catch {
+      setMessage("Failed to load entry.");
+    }
+  };
+
+  useEffect(() => {
+    if (id) {
+      loadEntry();
+    }
+  }, [id]);
+
+  const copyPassword = async () => {
+    if (!entry?.password) {
+      return;
+    }
+    await navigator.clipboard.writeText(entry.password);
+    setMessage("Password copied.");
+  };
+
+  const rotatePassword = async () => {
+    if (!entry) {
+      return;
+    }
+    const newPassword = generatePassword(20);
+    await fetch(`/api/entries?id=${entry._id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password: newPassword, status: "Rotate" }),
+    });
+    setMessage("Password rotated.");
+    loadEntry();
+  };
+
+  const duplicateEntry = async () => {
+    if (!entry) {
+      return;
+    }
+    await fetch("/api/entries", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: `${entry.name} Copy`,
+        username: entry.username,
+        password: entry.password,
+        url: entry.url,
+        notes: entry.notes,
+        status: entry.status,
+        risk: entry.risk,
+      }),
+    });
+    setMessage("Entry duplicated.");
+  };
+
   return (
     <AppShell
-      title="AWS Root"
-      subtitle="security@vaultify.io · High risk"
+      title={entry?.name || "Entry"}
+      subtitle={entry ? `${entry.username} · ${entry.risk || "Low"} risk` : ""}
       actions={
         <div className="flex flex-wrap gap-3">
           <Link
@@ -20,12 +106,12 @@ export default function VaultEntryDetailPage() {
           >
             Back to vault
           </Link>
-          <Link
-            href="/vault/new"
+          <button
+            onClick={duplicateEntry}
             className="rounded-full bg-emerald-500 px-5 py-2 text-sm font-semibold text-emerald-950 transition hover:bg-emerald-400"
           >
             Duplicate entry
-          </Link>
+          </button>
         </div>
       }
     >
@@ -34,18 +120,24 @@ export default function VaultEntryDetailPage() {
           <div className="flex items-start justify-between gap-6">
             <div>
               <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">Entry overview</p>
-              <h2 className="mt-2 text-2xl font-semibold">AWS Root</h2>
-              <p className="mt-2 text-sm text-zinc-400">Last rotated 45 days ago</p>
+              <h2 className="mt-2 text-2xl font-semibold">{entry?.name || "Loading..."}</h2>
+              <p className="mt-2 text-sm text-zinc-400">
+                Last updated {entry?.updatedAt ? new Date(entry.updatedAt).toLocaleDateString() : "-"}
+              </p>
             </div>
-            <span className="rounded-full border border-rose-500/20 bg-rose-500/10 px-3 py-1 text-xs text-rose-300">
-              Locked
+            <span
+              className={`rounded-full border px-3 py-1 text-xs ${
+                statusStyles[entry?.status || "Healthy"]
+              }`}
+            >
+              {entry?.status || "Healthy"}
             </span>
           </div>
 
           <div className="mt-6 grid gap-4 md:grid-cols-2">
             {[
-              { label: "Username", value: "security@vaultify.io" },
-              { label: "URL", value: "https://aws.amazon.com" },
+              { label: "Username", value: entry?.username || "-" },
+              { label: "URL", value: entry?.url || "-" },
               { label: "Vault folder", value: "Infrastructure" },
               { label: "Rotation", value: "Every 90 days" },
             ].map((item) => (
@@ -61,25 +153,30 @@ export default function VaultEntryDetailPage() {
 
           <div className="mt-6 rounded-2xl border border-white/10 bg-black/30 p-4">
             <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">Notes</p>
-            <p className="mt-2 text-sm text-zinc-300">
-              Use break-glass protocol. Rotate immediately after incident response.
-            </p>
+            <p className="mt-2 text-sm text-zinc-300">{entry?.notes || "-"}</p>
           </div>
 
           <div className="mt-6 flex flex-wrap gap-3">
-            <button className="rounded-full bg-emerald-500 px-5 py-2 text-sm font-semibold text-emerald-950">
+            <button
+              onClick={copyPassword}
+              className="rounded-full bg-emerald-500 px-5 py-2 text-sm font-semibold text-emerald-950"
+            >
               Copy password
             </button>
-            <button className="rounded-full border border-white/10 px-5 py-2 text-sm text-white/80">
+            <button
+              onClick={rotatePassword}
+              className="rounded-full border border-white/10 px-5 py-2 text-sm text-white/80"
+            >
               Rotate now
             </button>
             <Link
-              href="/vault/aws-root/edit"
+              href={`/vault/${id}/edit`}
               className="rounded-full border border-white/10 px-5 py-2 text-sm text-white/80"
             >
               Edit entry
             </Link>
           </div>
+          {message ? <p className="mt-3 text-sm text-zinc-400">{message}</p> : null}
         </section>
 
         <aside className="flex flex-col gap-6">

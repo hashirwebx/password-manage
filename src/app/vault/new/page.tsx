@@ -1,7 +1,52 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import AppShell from "@/components/AppShell";
+import { generatePassword } from "@/lib/password";
 
 export default function NewVaultEntryPage() {
+  const router = useRouter();
+  const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [url, setUrl] = useState("");
+  const [notes, setNotes] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState("");
+
+  const saveEntry = async (stayOnPage: boolean) => {
+    setSaving(true);
+    setMessage("");
+    try {
+      const response = await fetch("/api/entries", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, username, password, url, notes }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to save");
+      }
+
+      if (stayOnPage) {
+        setName("");
+        setUsername("");
+        setPassword("");
+        setUrl("");
+        setNotes("");
+        setMessage("Entry saved.");
+      } else {
+        router.push("/vault");
+      }
+    } catch {
+      setMessage("Failed to save entry.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <AppShell
       title="Create Vault Entry"
@@ -68,11 +113,19 @@ export default function NewVaultEntryPage() {
             </div>
 
             <div className="mt-6 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-              <form className="grid gap-4">
+              <form
+                className="grid gap-4"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  saveEntry(false);
+                }}
+              >
                 <label className="grid gap-2 text-sm text-zinc-300">
                   Entry name
                   <input
                     type="text"
+                    value={name}
+                    onChange={(event) => setName(event.target.value)}
                     placeholder="e.g. Stripe Admin"
                     className="rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white placeholder:text-zinc-500"
                   />
@@ -81,6 +134,8 @@ export default function NewVaultEntryPage() {
                   Username
                   <input
                     type="text"
+                    value={username}
+                    onChange={(event) => setUsername(event.target.value)}
                     placeholder="billing@vaultify.io"
                     className="rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white placeholder:text-zinc-500"
                   />
@@ -89,6 +144,8 @@ export default function NewVaultEntryPage() {
                   Password
                   <input
                     type="password"
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
                     placeholder="••••••••"
                     className="rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white placeholder:text-zinc-500"
                   />
@@ -97,6 +154,8 @@ export default function NewVaultEntryPage() {
                   URL
                   <input
                     type="url"
+                    value={url}
+                    onChange={(event) => setUrl(event.target.value)}
                     placeholder="https://example.com/login"
                     className="rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white placeholder:text-zinc-500"
                   />
@@ -105,19 +164,30 @@ export default function NewVaultEntryPage() {
                   Notes
                   <textarea
                     rows={4}
+                    value={notes}
+                    onChange={(event) => setNotes(event.target.value)}
                     placeholder="Add rotation tips or recovery info."
                     className="rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white placeholder:text-zinc-500"
                   />
                 </label>
 
                 <div className="mt-2 flex flex-wrap gap-3">
-                  <button className="rounded-full bg-emerald-500 px-6 py-3 text-sm font-semibold text-emerald-950">
+                  <button
+                    disabled={saving}
+                    className="rounded-full bg-emerald-500 px-6 py-3 text-sm font-semibold text-emerald-950 disabled:cursor-not-allowed disabled:opacity-70"
+                  >
                     Save entry
                   </button>
-                  <button className="rounded-full border border-white/10 px-6 py-3 text-sm font-semibold text-white/80">
+                  <button
+                    type="button"
+                    disabled={saving}
+                    onClick={() => saveEntry(true)}
+                    className="rounded-full border border-white/10 px-6 py-3 text-sm font-semibold text-white/80 disabled:cursor-not-allowed disabled:opacity-70"
+                  >
                     Save & add another
                   </button>
                 </div>
+                {message ? <p className="text-sm text-zinc-400">{message}</p> : null}
               </form>
 
               <aside className="flex flex-col gap-4">
@@ -136,7 +206,11 @@ export default function NewVaultEntryPage() {
                       <span className="text-zinc-400">View</span>
                     </label>
                   </div>
-                  <button className="mt-4 w-full rounded-xl border border-white/10 px-3 py-2 text-xs text-white/80">
+                  <button
+                    type="button"
+                    onClick={() => setMessage("Access updated.")}
+                    className="mt-4 w-full rounded-xl border border-white/10 px-3 py-2 text-xs text-white/80"
+                  >
                     Update access
                   </button>
                 </div>
@@ -149,7 +223,11 @@ export default function NewVaultEntryPage() {
                   <p className="mt-2 text-xs text-emerald-100/80">
                     The generator suggests a 32-character password on save.
                   </p>
-                  <button className="mt-4 w-full rounded-xl bg-emerald-400 px-3 py-2 text-xs font-semibold text-emerald-950">
+                  <button
+                    type="button"
+                    onClick={() => setPassword(generatePassword(20))}
+                    className="mt-4 w-full rounded-xl bg-emerald-400 px-3 py-2 text-xs font-semibold text-emerald-950"
+                  >
                     Generate password
                   </button>
                 </div>

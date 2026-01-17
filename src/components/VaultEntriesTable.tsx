@@ -87,7 +87,10 @@ export default function VaultEntriesTable({
           <h2 className="text-lg font-semibold">Vault entries</h2>
           <p className="text-sm text-zinc-400">Keep track of sensitive accounts.</p>
         </div>
-        <button className="rounded-full border border-white/10 px-4 py-2 text-sm text-white/80">
+        <button
+          onClick={loadEntries}
+          className="rounded-full border border-white/10 px-4 py-2 text-sm text-white/80"
+        >
           Refresh
         </button>
       </div>

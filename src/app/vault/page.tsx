@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import AppShell from "@/components/AppShell";
 import BackendStatus from "@/components/BackendStatus";
 import EntriesPanel from "@/components/EntriesPanel";
@@ -12,6 +12,8 @@ export default function VaultPage() {
   const [selectedRisks, setSelectedRisks] = useState<string[]>([]);
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
   const [resultCount, setResultCount] = useState(0);
+  const [importMessage, setImportMessage] = useState("");
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const quickTags = useMemo(
     () => ["finance", "infra", "marketing", "shared", "recent"],
@@ -26,13 +28,50 @@ export default function VaultPage() {
     setList([...list, value]);
   };
 
+  const handleImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    }
+    try {
+      const text = await file.text();
+      const parsed = JSON.parse(text);
+      if (!Array.isArray(parsed)) {
+        throw new Error("Invalid format");
+      }
+      await Promise.all(
+        parsed.map((item) =>
+          fetch("/api/entries", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              name: item.name,
+              username: item.username,
+              password: item.password,
+              url: item.url,
+              notes: item.notes,
+            }),
+          })
+        )
+      );
+      setImportMessage("Import complete.");
+    } catch {
+      setImportMessage("Import failed. Use an array of entries.");
+    } finally {
+      event.target.value = "";
+    }
+  };
+
   return (
     <AppShell
       title="Team Vault"
       subtitle="Manage saved credentials, rotation status, and sharing access."
       actions={
         <div className="flex flex-wrap gap-3">
-          <button className="rounded-full border border-white/10 px-4 py-2 text-sm text-white/80 transition hover:border-white/40">
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="rounded-full border border-white/10 px-4 py-2 text-sm text-white/80 transition hover:border-white/40"
+          >
             Import
           </button>
           <Link
@@ -44,6 +83,13 @@ export default function VaultPage() {
         </div>
       }
     >
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="application/json"
+        className="hidden"
+        onChange={handleImport}
+      />
       <section className="grid gap-6 lg:grid-cols-[1.5fr_0.7fr]">
         <div className="flex flex-col gap-6">
           <EntriesPanel />
@@ -147,6 +193,9 @@ export default function VaultPage() {
               >
                 Clear filters
               </button>
+              {importMessage ? (
+                <p className="text-xs text-zinc-400">{importMessage}</p>
+              ) : null}
             </div>
           </div>
           <div className="rounded-3xl border border-white/10 bg-zinc-900/60 p-6">
