@@ -14,6 +14,8 @@ export default function SettingsPage() {
   const [slackDigest, setSlackDigest] = useState(true);
   const [weeklySummary, setWeeklySummary] = useState(true);
   const [notice, setNotice] = useState("");
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [loadingUser, setLoadingUser] = useState(true);
 
   useEffect(() => {
     const stored = localStorage.getItem("pm_settings");
@@ -24,6 +26,38 @@ export default function SettingsPage() {
     setEmailAlerts(Boolean(parsed.emailAlerts));
     setSlackDigest(Boolean(parsed.slackDigest));
     setWeeklySummary(Boolean(parsed.weeklySummary));
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    const loadUser = async () => {
+      try {
+        const response = await fetch("/api/auth/me", { cache: "no-store" });
+        if (!response.ok) {
+          if (active) {
+            setUserEmail(null);
+          }
+          return;
+        }
+        const data = (await response.json()) as { email?: string };
+        if (active) {
+          setUserEmail(data?.email ?? null);
+        }
+      } catch {
+        if (active) {
+          setUserEmail(null);
+        }
+      } finally {
+        if (active) {
+          setLoadingUser(false);
+        }
+      }
+    };
+
+    loadUser();
+    return () => {
+      active = false;
+    };
   }, []);
 
   const savePreferences = () => {
@@ -40,7 +74,7 @@ export default function SettingsPage() {
       subtitle="Control alerts, team policies, and encryption preferences."
     >
       <section className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-        <div className="rounded-3xl border border-white/10 bg-zinc-900/60 p-6">
+          <div className="rounded-3xl border border-white/10 bg-zinc-900/60 p-6">
           <h2 className="text-lg font-semibold">Policy controls</h2>
           <p className="mt-2 text-sm text-zinc-400">
             Configure how your team handles sensitive access.
@@ -69,7 +103,10 @@ export default function SettingsPage() {
                   <p className="text-sm font-semibold text-white">{item.title}</p>
                   <p className="mt-1 text-xs text-zinc-400">{item.description}</p>
                 </div>
-                <button className="rounded-full border border-white/10 px-3 py-1 text-xs text-white/80">
+                <button
+                  onClick={() => setNotice(`${item.title} updated.`)}
+                  className="rounded-full border border-white/10 px-3 py-1 text-xs text-white/80"
+                >
                   Enabled
                 </button>
               </div>
@@ -86,7 +123,9 @@ export default function SettingsPage() {
             <div className="mt-4 space-y-3 text-sm text-zinc-300">
               <div className="flex items-center justify-between">
                 <span>Primary email</span>
-                <span className="text-zinc-400">admin@vaultify.io</span>
+                <span className="text-zinc-400">
+                  {loadingUser ? "Loading..." : userEmail ?? "Not signed in"}
+                </span>
               </div>
               <div className="flex items-center justify-between">
                 <span>Active devices</span>

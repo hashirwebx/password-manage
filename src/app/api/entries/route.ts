@@ -5,7 +5,7 @@ import { getAuthUser } from "@/lib/auth";
 
 export async function GET(request: Request) {
   await connectDb();
-  const user = getAuthUser();
+  const user = await getAuthUser();
   if (!user) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
@@ -26,7 +26,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   await connectDb();
-  const user = getAuthUser();
+  const user = await getAuthUser();
   if (!user) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
@@ -55,7 +55,7 @@ export async function POST(request: Request) {
 
 export async function PUT(request: Request) {
   await connectDb();
-  const user = getAuthUser();
+  const user = await getAuthUser();
   if (!user) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
@@ -80,7 +80,7 @@ export async function PUT(request: Request) {
 
 export async function DELETE(request: Request) {
   await connectDb();
-  const user = getAuthUser();
+  const user = await getAuthUser();
   if (!user) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }

@@ -18,8 +18,9 @@ export const signToken = (payload: TokenPayload) =>
 export const verifyToken = (token: string) =>
   jwt.verify(token, JWT_SECRET) as TokenPayload;
 
-export const getAuthUser = () => {
-  const token = cookies().get("pm_token")?.value;
+export const getAuthUser = async () => {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("pm_token")?.value;
   if (!token) {
     return null;
   }

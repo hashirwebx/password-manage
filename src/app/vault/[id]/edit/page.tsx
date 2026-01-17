@@ -168,6 +168,7 @@ export default function EditVaultEntryPage() {
 
           <div className="mt-6 flex flex-wrap gap-3">
             <button
+              type="submit"
               disabled={saving}
               className="rounded-full bg-emerald-500 px-6 py-3 text-sm font-semibold text-emerald-950 disabled:cursor-not-allowed disabled:opacity-70"
             >

@@ -1,14 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -28,7 +30,9 @@ export default function LoginPage() {
         throw new Error(data.message || "Auth failed");
       }
 
-      router.push("/vault");
+      const nextParam = searchParams.get("next");
+      const safeNext = nextParam && nextParam.startsWith("/") ? nextParam : "/vault";
+      router.push(safeNext);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Auth failed");
     } finally {
@@ -73,13 +77,22 @@ export default function LoginPage() {
               </label>
               <label className="grid gap-2 text-sm text-zinc-300">
                 Master password
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  placeholder="••••••••"
-                  className="rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white placeholder:text-zinc-500"
-                />
+                <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-black/40 px-4 py-2">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                    placeholder="••••••••"
+                    className="flex-1 bg-transparent py-1 text-sm text-white placeholder:text-zinc-500 focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    className="rounded-full border border-white/10 px-2 py-1 text-xs text-zinc-300 transition hover:text-white"
+                  >
+                    {showPassword ? "🙈" : "👁"}
+                  </button>
+                </div>
               </label>
               <button
                 disabled={loading}
@@ -132,5 +145,13 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-zinc-950 text-white" /> }>
+      <LoginContent />
+    </Suspense>
   );
 }
