@@ -52,6 +52,30 @@ export default function SettingsPage() {
 
         <aside className="flex flex-col gap-6">
           <div className="rounded-3xl border border-white/10 bg-zinc-900/60 p-6">
+            <h3 className="text-lg font-semibold">Notifications</h3>
+            <p className="mt-2 text-sm text-zinc-400">
+              Control where security alerts are delivered.
+            </p>
+            <div className="mt-4 space-y-3 text-sm text-zinc-300">
+              {[
+                "Email alerts",
+                "Slack digest",
+                "Weekly health summary",
+              ].map((item) => (
+                <label
+                  key={item}
+                  className="flex items-center justify-between rounded-2xl border border-white/10 bg-black/30 px-4 py-3"
+                >
+                  <span>{item}</span>
+                  <input type="checkbox" defaultChecked className="h-4 w-4 rounded border-white/20" />
+                </label>
+              ))}
+            </div>
+            <button className="mt-5 w-full rounded-2xl border border-white/10 px-4 py-2 text-sm text-white/80">
+              Save notification prefs
+            </button>
+          </div>
+          <div className="rounded-3xl border border-white/10 bg-zinc-900/60 p-6">
             <h3 className="text-lg font-semibold">Security alerts</h3>
             <p className="mt-2 text-sm text-zinc-400">
               Monitor weak passwords and unusual access.
