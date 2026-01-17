@@ -1,7 +1,9 @@
 import AppShell from "@/components/AppShell";
+import Link from "next/link";
 
 const entries = [
   {
+    id: "github-org",
     name: "GitHub Org",
     username: "engineering@vaultify.io",
     status: "Healthy",
@@ -9,6 +11,7 @@ const entries = [
     risk: "Low",
   },
   {
+    id: "salesforce",
     name: "Salesforce",
     username: "revenue@vaultify.io",
     status: "Rotate",
@@ -16,6 +19,7 @@ const entries = [
     risk: "Medium",
   },
   {
+    id: "aws-root",
     name: "AWS Root",
     username: "security@vaultify.io",
     status: "Locked",
@@ -46,9 +50,12 @@ export default function VaultPage() {
           <button className="rounded-full border border-white/10 px-4 py-2 text-sm text-white/80 transition hover:border-white/40">
             Import
           </button>
-          <button className="rounded-full bg-emerald-500 px-5 py-2 text-sm font-semibold text-emerald-950 transition hover:bg-emerald-400">
+          <Link
+            href="/vault/new"
+            className="rounded-full bg-emerald-500 px-5 py-2 text-sm font-semibold text-emerald-950 transition hover:bg-emerald-400"
+          >
             Add entry
-          </button>
+          </Link>
         </div>
       }
     >
@@ -78,9 +85,10 @@ export default function VaultPage() {
               <span>Updated</span>
             </div>
             {entries.map((entry) => (
-              <div
+              <Link
                 key={entry.name}
-                className="grid grid-cols-[2fr_2fr_1fr_1fr] items-center gap-4 border-b border-white/5 px-4 py-4 text-sm text-white last:border-b-0"
+                href={`/vault/${entry.id}`}
+                className="grid grid-cols-[2fr_2fr_1fr_1fr] items-center gap-4 border-b border-white/5 px-4 py-4 text-sm text-white transition hover:bg-white/5 last:border-b-0"
               >
                 <div>
                   <p className="font-semibold">{entry.name}</p>
@@ -95,7 +103,7 @@ export default function VaultPage() {
                   {entry.status}
                 </span>
                 <span className="text-zinc-400">{entry.updated}</span>
-              </div>
+              </Link>
             ))}
           </div>
         </div>
