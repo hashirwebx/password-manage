@@ -16,6 +16,7 @@ export default function EntriesPanel() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const loadEntries = async () => {
     try {
@@ -28,10 +29,6 @@ export default function EntriesPanel() {
   };
 
   const handleDelete = async (id: string) => {
-    const confirmed = window.confirm("Delete this entry? This will remove it from the database.");
-    if (!confirmed) {
-      return;
-    }
     try {
       await fetch(`/api/entries?id=${id}`, {
         method: "DELETE",
@@ -40,6 +37,22 @@ export default function EntriesPanel() {
     } catch {
       setError("Failed to delete entry");
     }
+  };
+
+  const confirmDelete = (id: string) => {
+    setConfirmDeleteId(id);
+  };
+
+  const cancelDelete = () => {
+    setConfirmDeleteId(null);
+  };
+
+  const proceedDelete = async () => {
+    if (!confirmDeleteId) {
+      return;
+    }
+    await handleDelete(confirmDeleteId);
+    setConfirmDeleteId(null);
   };
 
   useEffect(() => {
@@ -153,7 +166,7 @@ export default function EntriesPanel() {
                   Edit
                 </button>
                 <button
-                  onClick={() => handleDelete(entry._id)}
+                  onClick={() => confirmDelete(entry._id)}
                   className="rounded-full border border-white/10 px-3 py-1 text-xs text-white/80"
                 >
                   Delete
@@ -163,6 +176,31 @@ export default function EntriesPanel() {
           ))
         )}
       </div>
+
+      {confirmDeleteId ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
+          <div className="w-full max-w-md rounded-3xl border border-white/10 bg-zinc-900 p-6 shadow-2xl">
+            <h3 className="text-lg font-semibold text-white">Delete entry?</h3>
+            <p className="mt-2 text-sm text-zinc-400">
+              This will permanently remove the entry from the database.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <button
+                onClick={proceedDelete}
+                className="rounded-full bg-rose-500 px-5 py-2 text-sm font-semibold text-rose-50"
+              >
+                Delete
+              </button>
+              <button
+                onClick={cancelDelete}
+                className="rounded-full border border-white/10 px-5 py-2 text-sm text-white/80"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
