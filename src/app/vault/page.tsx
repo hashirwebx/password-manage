@@ -106,6 +106,26 @@ export default function VaultPage() {
               </Link>
             ))}
           </div>
+          <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-zinc-400">
+            <span className="uppercase tracking-[0.2em] text-zinc-500">Quick tags</span>
+            {[
+              "finance",
+              "infra",
+              "marketing",
+              "shared",
+              "recent",
+            ].map((tag) => (
+              <button
+                key={tag}
+                className="rounded-full border border-white/10 px-3 py-1 text-xs text-white/80"
+              >
+                {tag}
+              </button>
+            ))}
+            <span className="ml-auto rounded-full border border-white/10 px-3 py-1">
+              18 results
+            </span>
+          </div>
         </div>
 
         <aside className="flex flex-col gap-6">
