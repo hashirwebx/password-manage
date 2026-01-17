@@ -153,6 +153,23 @@ export default function Home() {
           </div>
         </section>
 
+        <section className="grid gap-6 md:grid-cols-3">
+          {[
+            { label: "Total vault entries", value: "128", trend: "+6 this month" },
+            { label: "Team members", value: "12", trend: "3 pending" },
+            { label: "Risk score", value: "78", trend: "Improving" },
+          ].map((stat) => (
+            <div
+              key={stat.label}
+              className="rounded-2xl border border-white/10 bg-zinc-900/60 p-6"
+            >
+              <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">{stat.label}</p>
+              <p className="mt-4 text-3xl font-semibold text-white">{stat.value}</p>
+              <p className="mt-2 text-xs text-zinc-400">{stat.trend}</p>
+            </div>
+          ))}
+        </section>
+
         <footer className="flex flex-col items-start justify-between gap-4 border-t border-white/10 pt-6 text-sm text-zinc-500 md:flex-row">
           <p>Frontend prototype for the Password Manager app.</p>
           <p>Next.js UI only — backend integration comes next.</p>

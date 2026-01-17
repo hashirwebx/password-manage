@@ -11,6 +11,7 @@ Frontend-first password manager UI built with Next.js App Router and Tailwind CS
 - Edit Entry: Update credentials
 - Vault Filters: Sidebar filter panel
 - Vault Search: Quick tag chips
+- Dashboard Stats: Home widgets
 - Settings: Security policies and alerts
 - Login: Auth UI
 
