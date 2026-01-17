@@ -1,48 +1,31 @@
+"use client";
+
+import { useMemo, useState } from "react";
 import AppShell from "@/components/AppShell";
 import BackendStatus from "@/components/BackendStatus";
 import EntriesPanel from "@/components/EntriesPanel";
+import VaultEntriesTable from "@/components/VaultEntriesTable";
 import Link from "next/link";
 
-const entries = [
-  {
-    id: "github-org",
-    name: "GitHub Org",
-    username: "engineering@vaultify.io",
-    status: "Healthy",
-    updated: "2 hours ago",
-    risk: "Low",
-  },
-  {
-    id: "salesforce",
-    name: "Salesforce",
-    username: "revenue@vaultify.io",
-    status: "Rotate",
-    updated: "3 days ago",
-    risk: "Medium",
-  },
-  {
-    id: "aws-root",
-    name: "AWS Root",
-    username: "security@vaultify.io",
-    status: "Locked",
-    updated: "1 week ago",
-    risk: "High",
-  },
-];
-
-const statusStyles: Record<string, string> = {
-  Healthy: "bg-emerald-500/10 text-emerald-300 border-emerald-500/20",
-  Rotate: "bg-amber-500/10 text-amber-300 border-amber-500/20",
-  Locked: "bg-rose-500/10 text-rose-300 border-rose-500/20",
-};
-
-const riskStyles: Record<string, string> = {
-  Low: "text-emerald-200",
-  Medium: "text-amber-200",
-  High: "text-rose-200",
-};
-
 export default function VaultPage() {
+  const [search, setSearch] = useState("");
+  const [selectedRisks, setSelectedRisks] = useState<string[]>([]);
+  const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
+  const [resultCount, setResultCount] = useState(0);
+
+  const quickTags = useMemo(
+    () => ["finance", "infra", "marketing", "shared", "recent"],
+    []
+  );
+
+  const toggleFilter = (value: string, list: string[], setList: (next: string[]) => void) => {
+    if (list.includes(value)) {
+      setList(list.filter((item) => item !== value));
+      return;
+    }
+    setList([...list, value]);
+  };
+
   return (
     <AppShell
       title="Team Vault"
@@ -65,69 +48,45 @@ export default function VaultPage() {
         <div className="flex flex-col gap-6">
           <EntriesPanel />
           <div className="rounded-3xl border border-white/10 bg-zinc-900/60 p-6">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <h2 className="text-lg font-semibold">Vault entries</h2>
-              <p className="text-sm text-zinc-400">Keep track of sensitive accounts.</p>
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <h2 className="text-lg font-semibold">Vault entries</h2>
+                <p className="text-sm text-zinc-400">Keep track of sensitive accounts.</p>
+              </div>
+              <div className="flex gap-3">
+                <input
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  className="rounded-full border border-white/10 bg-black/30 px-4 py-2 text-sm text-white placeholder:text-zinc-500"
+                  placeholder="Search vault"
+                />
+                <button className="rounded-full border border-white/10 px-4 py-2 text-sm text-white/80">
+                  Filters
+                </button>
+              </div>
             </div>
-            <div className="flex gap-3">
-              <input
-                className="rounded-full border border-white/10 bg-black/30 px-4 py-2 text-sm text-white placeholder:text-zinc-500"
-                placeholder="Search vault"
-              />
-              <button className="rounded-full border border-white/10 px-4 py-2 text-sm text-white/80">
-                Filters
-              </button>
-            </div>
-          </div>
 
-          <div className="mt-6 overflow-hidden rounded-2xl border border-white/10">
-            <div className="grid grid-cols-[2fr_2fr_1fr_1fr] gap-4 border-b border-white/10 bg-black/40 px-4 py-3 text-xs uppercase tracking-[0.2em] text-zinc-500">
-              <span>Entry</span>
-              <span>Username</span>
-              <span>Status</span>
-              <span>Updated</span>
+            <div className="mt-6">
+              <VaultEntriesTable
+                search={search}
+                risks={selectedRisks}
+                statuses={selectedStatuses}
+                onCountChange={setResultCount}
+              />
             </div>
-            {entries.map((entry) => (
-              <Link
-                key={entry.name}
-                href={`/vault/${entry.id}`}
-                className="grid grid-cols-[2fr_2fr_1fr_1fr] items-center gap-4 border-b border-white/5 px-4 py-4 text-sm text-white transition hover:bg-white/5 last:border-b-0"
-              >
-                <div>
-                  <p className="font-semibold">{entry.name}</p>
-                  <p className={`text-xs ${riskStyles[entry.risk]}`}>
-                    Risk: {entry.risk}
-                  </p>
-                </div>
-                <span className="text-zinc-300">{entry.username}</span>
-                <span
-                  className={`w-fit rounded-full border px-3 py-1 text-xs ${statusStyles[entry.status]}`}
-                >
-                  {entry.status}
-                </span>
-                <span className="text-zinc-400">{entry.updated}</span>
-              </Link>
-            ))}
-          </div>
             <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-zinc-400">
               <span className="uppercase tracking-[0.2em] text-zinc-500">Quick tags</span>
-              {[
-                "finance",
-                "infra",
-                "marketing",
-                "shared",
-                "recent",
-              ].map((tag) => (
+              {quickTags.map((tag) => (
                 <button
                   key={tag}
+                  onClick={() => setSearch(tag)}
                   className="rounded-full border border-white/10 px-3 py-1 text-xs text-white/80"
                 >
                   {tag}
                 </button>
               ))}
               <span className="ml-auto rounded-full border border-white/10 px-3 py-1">
-                18 results
+                {resultCount} results
               </span>
             </div>
           </div>
@@ -151,6 +110,7 @@ export default function VaultPage() {
                   ].map((chip) => (
                     <button
                       key={chip.label}
+                      onClick={() => toggleFilter(chip.label, selectedRisks, setSelectedRisks)}
                       className={`rounded-full border px-3 py-1 text-xs ${chip.style}`}
                     >
                       {chip.label}
@@ -167,14 +127,25 @@ export default function VaultPage() {
                     "Locked",
                   ].map((status) => (
                     <label key={status} className="flex items-center gap-2">
-                      <input type="checkbox" className="h-4 w-4 rounded border-white/20" />
+                      <input
+                        type="checkbox"
+                        checked={selectedStatuses.includes(status)}
+                        onChange={() => toggleFilter(status, selectedStatuses, setSelectedStatuses)}
+                        className="h-4 w-4 rounded border-white/20"
+                      />
                       {status}
                     </label>
                   ))}
                 </div>
               </div>
-              <button className="w-full rounded-2xl border border-white/10 px-4 py-2 text-sm text-white/80">
-                Apply filters
+              <button
+                onClick={() => {
+                  setSelectedRisks([]);
+                  setSelectedStatuses([]);
+                }}
+                className="w-full rounded-2xl border border-white/10 px-4 py-2 text-sm text-white/80"
+              >
+                Clear filters
               </button>
             </div>
           </div>
