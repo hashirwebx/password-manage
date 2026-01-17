@@ -73,9 +73,12 @@ export default function VaultEntryDetailPage() {
             <button className="rounded-full border border-white/10 px-5 py-2 text-sm text-white/80">
               Rotate now
             </button>
-            <button className="rounded-full border border-white/10 px-5 py-2 text-sm text-white/80">
+            <Link
+              href="/vault/aws-root/edit"
+              className="rounded-full border border-white/10 px-5 py-2 text-sm text-white/80"
+            >
               Edit entry
-            </button>
+            </Link>
           </div>
         </section>
 
