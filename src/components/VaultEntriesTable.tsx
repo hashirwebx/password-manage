@@ -51,6 +51,10 @@ export default function VaultEntriesTable({
   const loadEntries = async () => {
     try {
       const response = await fetch("/api/entries");
+      if (response.status === 401) {
+        setError("Please sign in to view entries.");
+        return;
+      }
       const data = await response.json();
       setEntries(data);
     } catch {

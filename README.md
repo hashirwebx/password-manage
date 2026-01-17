@@ -43,6 +43,8 @@ cp .env.example .env
 
 2) Update `MONGO_URI` if needed.
 
+3) Set `JWT_SECRET` in `.env`.
+
 3) Start the app:
 
 ```bash
@@ -59,6 +61,13 @@ The API runs on http://localhost:3000/api
 - GET /api/entries?id=ENTRY_ID
 - PUT /api/entries?id=ENTRY_ID
 - DELETE /api/entries?id=ENTRY_ID
+
+## Auth Endpoints
+
+- POST /api/auth/register
+- POST /api/auth/login
+- POST /api/auth/logout
+- GET /api/auth/me
 
 ## Notes
 
