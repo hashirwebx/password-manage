@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import AppShell from "@/components/AppShell";
 import { generatePassword } from "@/lib/password";
+import { checkPasswordStrength } from "@/lib/passwordStrength";
 
 export default function NewVaultEntryPage() {
   const router = useRouter();
@@ -15,6 +16,7 @@ export default function NewVaultEntryPage() {
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const [strength, setStrength] = useState({ level: "", color: "" });
 
   const saveEntry = async (stayOnPage: boolean) => {
     setSaving(true);
@@ -99,10 +101,14 @@ export default function NewVaultEntryPage() {
               <input
                 type="password"
                 value={password}
-                onChange={(event) => setPassword(event.target.value)}
+                onChange={(event) => {
+                  setPassword(event.target.value);
+                  setStrength(checkPasswordStrength(event.target.value));
+                }}
                 placeholder="••••••••"
                 className="rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white placeholder:text-zinc-500"
               />
+              <div style={{ color: strength.color }}>Strength: {strength.level}</div>
             </label>
             <label className="grid gap-2 text-sm text-zinc-300">
               URL

@@ -17,7 +17,7 @@ app.get("/api/health", (req, res) => {
 
 app.use("/api/entries", entriesRouter);
 
-const port = process.env.PORT || 4000;
+const port = process.env.PORT || 3000;
 
 connectDb(process.env.MONGO_URI)
   .then(() => {

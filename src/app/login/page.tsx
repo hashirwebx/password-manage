@@ -3,6 +3,7 @@
 import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { checkPasswordStrength } from "@/lib/passwordStrength";
 
 function LoginContent() {
   const router = useRouter();
@@ -13,13 +14,14 @@ function LoginContent() {
   const [showPassword, setShowPassword] = useState(false);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [strength, setStrength] = useState({ level: "", color: "" });
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setMessage("");
     setLoading(true);
     try {
-      const response = await fetch(`/api/auth/${mode === "login" ? "login" : "register"}` , {
+      const response = await fetch(`/api/auth/${mode === "login" ? "login" : "register"}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -77,22 +79,24 @@ function LoginContent() {
               </label>
               <label className="grid gap-2 text-sm text-zinc-300">
                 Master password
-                <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-black/40 px-4 py-2">
                   <input
-                    type={showPassword ? "text" : "password"}
+                    type="password"
                     value={password}
-                    onChange={(event) => setPassword(event.target.value)}
+                    onChange={(event) => {
+                      setPassword(event.target.value);
+                      setStrength(checkPasswordStrength(event.target.value));
+                    }}
                     placeholder="••••••••"
-                    className="flex-1 bg-transparent py-1 text-sm text-white placeholder:text-zinc-500 focus:outline-none"
+                    className="rounded-2xl border border-white/10 bg-black/40 px-6 py-3 text-sm text-white placeholder:text-zinc-500"
                   />
-                  <button
+                  {/* <button
                     type="button"
                     onClick={() => setShowPassword((prev) => !prev)}
                     className="rounded-full border border-white/10 px-2 py-1 text-xs text-zinc-300 transition hover:text-white"
                   >
                     {showPassword ? "🙈" : "👁"}
-                  </button>
-                </div>
+                  </button> */}
+                <div style={{ color: strength.color }}>Strength: {strength.level}</div>
               </label>
               <button
                 disabled={loading}
@@ -150,7 +154,7 @@ function LoginContent() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-zinc-950 text-white" /> }>
+    <Suspense fallback={<div className="min-h-screen bg-zinc-950 text-white" />}>
       <LoginContent />
     </Suspense>
   );
