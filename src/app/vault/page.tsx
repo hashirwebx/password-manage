@@ -39,24 +39,53 @@ export default function VaultPage() {
       if (!Array.isArray(parsed)) {
         throw new Error("Invalid format");
       }
-      await Promise.all(
-        parsed.map((item) =>
-          fetch("/api/entries", {
+
+      let successCount = 0;
+      let failedCount = 0;
+
+      // Process entries one by one to track failures
+      for (const item of parsed) {
+        try {
+          const response = await fetch("/api/entries", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              name: item.name,
-              username: item.username,
-              password: item.password,
-              url: item.url,
-              notes: item.notes,
+              name: item.name || item.title || "Untitled",
+              username: item.username || "",
+              password: item.password || "",
+              url: item.url || "",
+              notes: item.notes || "",
+              status: item.status || "Healthy",
+              risk: item.risk || "Low",
             }),
-          })
-        )
+          });
+
+          if (!response.ok) {
+            const error = await response.json();
+            console.error("Failed to import entry:", error);
+            failedCount++;
+          } else {
+            successCount++;
+          }
+        } catch (error) {
+          console.error("Error importing entry:", error);
+          failedCount++;
+        }
+      }
+
+      setImportMessage(
+        `Import complete: ${successCount} succeeded${failedCount > 0 ? `, ${failedCount} failed` : ""}`
       );
-      setImportMessage("Import complete.");
-    } catch {
-      setImportMessage("Import failed. Use an array of entries.");
+
+      // Refresh entries after import
+      if (successCount > 0) {
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
+      }
+    } catch (error) {
+      console.error("Import error:", error);
+      setImportMessage("Import failed. Use a valid JSON array of entries.");
     } finally {
       event.target.value = "";
     }
@@ -194,7 +223,9 @@ export default function VaultPage() {
                 Clear filters
               </button>
               {importMessage ? (
-                <p className="text-xs text-zinc-400">{importMessage}</p>
+                <p className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-200">
+                  {importMessage}
+                </p>
               ) : null}
             </div>
           </div>

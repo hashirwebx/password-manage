@@ -749,9 +749,9 @@ export function PasswordHealthDashboard() {
   return (
     <div>
       <h2>Password Health: {health?.score}%</h2>
-      <div>⚠️ Weak: {health?.weakPasswords.length}</div>
-      <div>🔄 Duplicates: {health?.duplicates.length}</div>
-      <div>📅 Old: {health?.oldPasswords.length}</div>
+      <div> Weak: {health?.weakPasswords.length}</div>
+      <div> Duplicates: {health?.duplicates.length}</div>
+      <div> Old: {health?.oldPasswords.length}</div>
     </div>
   );
 }
