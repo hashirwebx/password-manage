@@ -10,6 +10,8 @@ type Entry = {
   status?: string;
   risk?: string;
   updatedAt?: string;
+  shared?: boolean;
+  sharedFromEmail?: string;
 };
 
 type VaultEntriesTableProps = {
@@ -72,7 +74,8 @@ export default function VaultEntriesTable({
       const matchesSearch =
         !term ||
         entry.name.toLowerCase().includes(term) ||
-        entry.username.toLowerCase().includes(term);
+        entry.username.toLowerCase().includes(term) ||
+        (entry.shared && "shared".includes(term));
       const matchesRisk = risks.length === 0 || risks.includes(entry.risk || "Low");
       const matchesStatus =
         statuses.length === 0 || statuses.includes(entry.status || "Healthy");
@@ -118,12 +121,24 @@ export default function VaultEntriesTable({
               className="grid grid-cols-[2fr_2fr_1fr_1fr] items-center gap-4 border-b border-white/5 px-4 py-4 text-sm text-white transition hover:bg-white/5 last:border-b-0"
             >
               <div>
-                <p className="font-semibold">{entry.name}</p>
+                <div className="flex items-center gap-2">
+                  <p className="font-semibold">{entry.name}</p>
+                  {entry.shared ? (
+                    <span className="rounded-full border border-amber-400/40 bg-amber-400/10 px-2 py-0.5 text-[10px] uppercase tracking-[0.15em] text-amber-200">
+                      Shared
+                    </span>
+                  ) : null}
+                </div>
                 <p className={`text-xs ${riskStyles[entry.risk || "Low"]}`}>
                   Risk: {entry.risk || "Low"}
                 </p>
               </div>
-              <span className="text-zinc-300">{entry.username}</span>
+              <div className="text-zinc-300">
+                <p>{entry.username}</p>
+                {entry.shared && entry.sharedFromEmail ? (
+                  <p className="text-[11px] text-zinc-500">From {entry.sharedFromEmail}</p>
+                ) : null}
+              </div>
               <span
                 className={`w-fit rounded-full border px-3 py-1 text-xs ${
                   statusStyles[entry.status || "Healthy"]

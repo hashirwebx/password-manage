@@ -2,6 +2,14 @@ import { NextResponse } from "next/server";
 import connectDb from "@/lib/db";
 import Entry from "@/lib/entryModel";
 import { getAuthUser } from "@/lib/auth";
+import Share from "@/lib/shareModel";
+
+const sortEntriesDesc = (entries: any[]) =>
+  entries.sort(
+    (a, b) =>
+      new Date(b.updatedAt || b.createdAt || 0).getTime() -
+      new Date(a.updatedAt || a.createdAt || 0).getTime()
+  );
 
 export async function GET(request: Request) {
   await connectDb();
@@ -11,17 +19,78 @@ export async function GET(request: Request) {
   }
   const { searchParams } = new URL(request.url);
   const id = searchParams.get("id");
+  const scope = searchParams.get("scope") || "all";
 
   if (id) {
-    const entry = await Entry.findOne({ _id: id, userId: user.userId });
-    if (!entry) {
+    const ownedEntry = await Entry.findOne({ _id: id, userId: user.userId }).lean();
+    if (ownedEntry) {
+      return NextResponse.json({ ...ownedEntry, shared: false });
+    }
+
+    const share = await Share.findOne({
+      entryId: id,
+      toUserId: user.userId,
+      status: "active",
+    }).lean();
+
+    if (!share) {
       return NextResponse.json({ message: "Entry not found" }, { status: 404 });
     }
-    return NextResponse.json(entry);
+
+    const sharedEntry = await Entry.findById(id).lean();
+    if (!sharedEntry) {
+      return NextResponse.json({ message: "Entry not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({
+      ...sharedEntry,
+      shared: true,
+      shareId: share._id.toString(),
+      sharedFromEmail: share.fromEmail,
+      permissions: share.permissions,
+    });
   }
 
-  const entries = await Entry.find({ userId: user.userId }).sort({ createdAt: -1 });
-  return NextResponse.json(entries);
+  const results: any[] = [];
+
+  if (scope !== "shared") {
+    const ownedEntries = await Entry.find({ userId: user.userId }).lean();
+    ownedEntries.forEach((entry) => {
+      results.push({ ...entry, shared: false });
+    });
+  }
+
+  if (scope !== "owned") {
+    const shares = await Share.find({
+      toUserId: user.userId,
+      status: "active",
+    })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    if (shares.length > 0) {
+      const sharedEntryIds = shares.map((share) => share.entryId);
+      const sharedEntries = await Entry.find({ _id: { $in: sharedEntryIds } }).lean();
+      const entryMap = new Map(
+        sharedEntries.map((entry) => [entry._id.toString(), entry])
+      );
+
+      shares.forEach((share) => {
+        const entry = entryMap.get(share.entryId.toString());
+        if (entry) {
+          results.push({
+            ...entry,
+            shared: true,
+            shareId: share._id.toString(),
+            sharedFromEmail: share.fromEmail,
+            permissions: share.permissions,
+          });
+        }
+      });
+    }
+  }
+
+  return NextResponse.json(sortEntriesDesc(results));
 }
 
 export async function POST(request: Request) {
