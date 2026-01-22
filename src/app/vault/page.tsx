@@ -33,59 +33,40 @@ export default function VaultPage() {
     if (!file) {
       return;
     }
+
+    // Check file type
+    if (file.type !== "application/json" && !file.name.toLowerCase().endsWith('.json')) {
+      setImportMessage("Error: Only JSON files are allowed.");
+      event.target.value = "";
+      return;
+    }
+
     try {
       const text = await file.text();
       const parsed = JSON.parse(text);
-      if (!Array.isArray(parsed)) {
-        throw new Error("Invalid format");
-      }
 
-      let successCount = 0;
-      let failedCount = 0;
+      const response = await fetch("/api/entries/import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(parsed),
+      });
 
-      // Process entries one by one to track failures
-      for (const item of parsed) {
-        try {
-          const response = await fetch("/api/entries", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              name: item.name || item.title || "Untitled",
-              username: item.username || "",
-              password: item.password || "",
-              url: item.url || "",
-              notes: item.notes || "",
-              status: item.status || "Healthy",
-              risk: item.risk || "Low",
-            }),
-          });
+      const result = await response.json();
 
-          if (!response.ok) {
-            const error = await response.json();
-            console.error("Failed to import entry:", error);
-            failedCount++;
-          } else {
-            successCount++;
-          }
-        } catch (error) {
-          console.error("Error importing entry:", error);
-          failedCount++;
+      if (!response.ok) {
+        let errorMessage = `Import failed: ${result.error}`;
+        if (result.example) {
+          errorMessage += `\n\nExpected format:\n${JSON.stringify(result.example, null, 2)}`;
         }
+        setImportMessage(errorMessage);
+        return;
       }
 
-      setImportMessage(
-        `Import complete: ${successCount} succeeded${failedCount > 0 ? `, ${failedCount} failed` : ""}`
-      );
-
-      // Refresh entries after import
-      if (successCount > 0) {
-        setTimeout(() => {
-          window.location.reload();
-        }, 1500);
-      }
+      setImportMessage(result.message);
+      // Refresh the entries table
+      window.location.reload();
     } catch (error) {
-      console.error("Import error:", error);
-      setImportMessage("Import failed. Use a valid JSON array of entries.");
+      setImportMessage("Import failed. Please check the file format and try again.");
     } finally {
       event.target.value = "";
     }
@@ -223,9 +204,7 @@ export default function VaultPage() {
                 Clear filters
               </button>
               {importMessage ? (
-                <p className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-200">
-                  {importMessage}
-                </p>
+                <p className="text-xs text-zinc-400">{importMessage}</p>
               ) : null}
             </div>
           </div>

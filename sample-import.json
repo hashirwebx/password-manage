@@ -1,0 +1,23 @@
+[
+  {
+    "name": "Gmail Account",
+    "username": "user@gmail.com",
+    "password": "securePass123!",
+    "url": "https://mail.google.com",
+    "notes": "Personal email account"
+  },
+  {
+    "name": "GitHub",
+    "username": "developer",
+    "password": "githubPass456!",
+    "url": "https://github.com",
+    "notes": "Development platform"
+  },
+  {
+    "name": "Company Website",
+    "username": "admin@company.com",
+    "password": "adminPass789!",
+    "url": "https://company.com",
+    "notes": "Admin access to company website"
+  }
+]

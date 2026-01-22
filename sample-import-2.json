@@ -1,0 +1,23 @@
+[
+  {
+    "title": "Facebook Account",
+    "email": "user@facebook.com",
+    "pass": "fbPass123!",
+    "website": "https://facebook.com",
+    "comment": "Social media account"
+  },
+  {
+    "service": "Twitter",
+    "user": "tweeter",
+    "passwd": "tweetPass456!",
+    "domain": "https://twitter.com",
+    "description": "Microblogging platform"
+  },
+  {
+    "account": "LinkedIn",
+    "login": "professional@email.com",
+    "pwd": "linked789!",
+    "link": "https://linkedin.com",
+    "remark": "Professional networking"
+  }
+]

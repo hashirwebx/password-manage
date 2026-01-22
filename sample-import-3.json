@@ -1,0 +1,15 @@
+[
+  {
+    "site": "YouTube",
+    "userId": "youtuber123",
+    "secret": "youtubePass!",
+    "notes": "Video sharing platform"
+  },
+  {
+    "label": "Bank Account",
+    "account": "123456789",
+    "password": "bankSecure2024!",
+    "url": "https://bank.com",
+    "notes": "Online banking access"
+  }
+]
