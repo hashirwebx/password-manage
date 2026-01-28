@@ -43,7 +43,7 @@ A full-stack password manager built with Next.js, MongoDB, and NextAuth.js. Feat
 
 1. **Clone the repository**
 ```bash
-git clone <repository-url>
+git clone https://github.com/hashirwebx/password-manage.git
 cd password-manager-with-nextjs
 ```
 
