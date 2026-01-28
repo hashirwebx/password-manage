@@ -23,6 +23,5 @@ export async function GET() {
     userId: user._id.toString(),
     organizationId: user.organizationId?.toString() ?? null,
     role: user.role,
-    name: user.name,
   });
 }

@@ -42,7 +42,7 @@ export async function GET(
       email: invitation.email,
       role: invitation.role,
       organizationId: invitation.organizationId,
-      invitedBy: inviter?.name || inviter?.email || invitation.invitedByEmail,
+      invitedBy: inviter?.email || invitation.invitedByEmail,
       expiresAt: invitation.expiresAt
     });
   } catch (error) {

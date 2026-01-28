@@ -61,7 +61,7 @@ export async function POST(
     // Resend the invitation email
     await sendInvitationEmail({
       to: invitation.email,
-      inviterName: currentUser.name || currentUser.email,
+      inviterName: currentUser.email,
       organizationId: currentUser.organizationId.toString(),
       token: invitation.token,
     });

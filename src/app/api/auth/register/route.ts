@@ -32,8 +32,7 @@ export async function POST(request: Request) {
     console.log('[Register] Creating user...');
     const user = await User.create({ 
       email: normalizedEmail, 
-      passwordHash,
-      name: name?.trim() || normalizedEmail.split('@')[0]
+      passwordHash
     });
     console.log(`[Register] User created with ID: ${user._id}`);
 

@@ -88,7 +88,7 @@ export async function POST(request: Request) {
     // Send invitation email
     await sendInvitationEmail({
       to: email,
-      inviterName: currentUser.name || currentUser.email,
+      inviterName: currentUser.email,
       organizationId: currentUser.organizationId.toString(),
       token,
     });

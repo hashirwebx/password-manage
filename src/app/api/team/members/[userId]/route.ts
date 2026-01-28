@@ -6,10 +6,10 @@ import { authOptions } from '@/lib/authOptions';
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
-    const userId = params.userId;
+    const { userId } = await params;
     console.log('[RemoveMember] Attempting to remove user:', userId);
     
     // Get the current user from NextAuth session
