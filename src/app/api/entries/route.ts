@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import connectDb from "@/lib/db";
 import Entry from "@/lib/entryModel";
-import { getAuthUser } from "@/lib/auth";
 import Share from "@/lib/shareModel";
+import { requireCurrentUser } from "@/lib/currentUser";
 
 const sortEntriesDesc = (entries: any[]) =>
   entries.sort(
@@ -11,25 +11,37 @@ const sortEntriesDesc = (entries: any[]) =>
       new Date(a.updatedAt || a.createdAt || 0).getTime()
   );
 
+const buildOwnershipFilter = (userId: string, organizationId?: string) => {
+  if (!organizationId) {
+    return { userId };
+  }
+  return {
+    $or: [{ userId }, { organizationId }],
+  };
+};
+
 export async function GET(request: Request) {
   await connectDb();
-  const user = await getAuthUser();
-  if (!user) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-  }
+  const { user } = await requireCurrentUser();
+
+  const viewerId = user._id.toString();
+  const organizationId = user.organizationId?.toString();
   const { searchParams } = new URL(request.url);
   const id = searchParams.get("id");
   const scope = searchParams.get("scope") || "all";
 
   if (id) {
-    const ownedEntry = await Entry.findOne({ _id: id, userId: user.userId }).lean();
+    const ownedEntry = await Entry.findOne({
+      _id: id,
+      ...buildOwnershipFilter(viewerId, organizationId),
+    }).lean();
     if (ownedEntry) {
       return NextResponse.json({ ...ownedEntry, shared: false });
     }
 
     const share = await Share.findOne({
       entryId: id,
-      toUserId: user.userId,
+      toUserId: viewerId,
       status: "active",
     }).lean();
 
@@ -54,7 +66,7 @@ export async function GET(request: Request) {
   const results: any[] = [];
 
   if (scope !== "shared") {
-    const ownedEntries = await Entry.find({ userId: user.userId }).lean();
+    const ownedEntries = await Entry.find(buildOwnershipFilter(viewerId, organizationId)).lean();
     ownedEntries.forEach((entry) => {
       results.push({ ...entry, shared: false });
     });
@@ -62,7 +74,7 @@ export async function GET(request: Request) {
 
   if (scope !== "owned") {
     const shares = await Share.find({
-      toUserId: user.userId,
+      toUserId: viewerId,
       status: "active",
     })
       .sort({ createdAt: -1 })
@@ -95,10 +107,8 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   await connectDb();
-  const user = await getAuthUser();
-  if (!user) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-  }
+  const { user } = await requireCurrentUser();
+  const viewerId = user._id.toString();
   const body = await request.json();
   const { name, username, password, url, notes, status, risk } = body;
 
@@ -110,7 +120,8 @@ export async function POST(request: Request) {
   }
 
   const entry = await Entry.create({
-    userId: user.userId,
+    userId: viewerId,
+    organizationId: user.organizationId,
     name,
     username,
     password,
@@ -124,10 +135,9 @@ export async function POST(request: Request) {
 
 export async function PUT(request: Request) {
   await connectDb();
-  const user = await getAuthUser();
-  if (!user) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-  }
+  const { user } = await requireCurrentUser();
+  const viewerId = user._id.toString();
+  const organizationId = user.organizationId?.toString();
   const { searchParams } = new URL(request.url);
   const id = searchParams.get("id");
 
@@ -137,7 +147,7 @@ export async function PUT(request: Request) {
 
   const updates = await request.json();
   const entry = await Entry.findOneAndUpdate(
-    { _id: id, userId: user.userId },
+    { _id: id, ...buildOwnershipFilter(viewerId, organizationId) },
     updates,
     { new: true }
   );
@@ -149,10 +159,9 @@ export async function PUT(request: Request) {
 
 export async function DELETE(request: Request) {
   await connectDb();
-  const user = await getAuthUser();
-  if (!user) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-  }
+  const { user } = await requireCurrentUser();
+  const viewerId = user._id.toString();
+  const organizationId = user.organizationId?.toString();
   const { searchParams } = new URL(request.url);
   const id = searchParams.get("id");
 
@@ -160,7 +169,10 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ message: "id is required" }, { status: 400 });
   }
 
-  const entry = await Entry.findOneAndDelete({ _id: id, userId: user.userId });
+  const entry = await Entry.findOneAndDelete({
+    _id: id,
+    ...buildOwnershipFilter(viewerId, organizationId),
+  });
   if (!entry) {
     return NextResponse.json({ message: "Entry not found" }, { status: 404 });
   }

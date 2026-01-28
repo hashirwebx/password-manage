@@ -20,8 +20,30 @@ export default async function connectDb() {
     return cached.conn;
   }
   if (!cached.promise) {
-    cached.promise = mongoose.connect(MONGO_URI).then((mongooseInstance) => mongooseInstance);
+    const opts = {
+      bufferCommands: false,
+      maxPoolSize: 10,
+      serverSelectionTimeoutMS: 5000, // Keep this low to fail fast in dev
+      socketTimeoutMS: 45000,
+    };
+
+    cached.promise = mongoose.connect(MONGO_URI, opts).then((mongooseInstance) => {
+      console.log('✅ MongoDB Connected Successfully');
+      return mongooseInstance;
+    }).catch(err => {
+      console.error('❌ MongoDB Connection Error:', err);
+      // Delete promise so we can retry on next request
+      cached.promise = null;
+      throw err;
+    });
   }
-  cached.conn = await cached.promise;
+
+  try {
+    cached.conn = await cached.promise;
+  } catch (e) {
+    cached.promise = null;
+    throw e;
+  }
+
   return cached.conn;
 }

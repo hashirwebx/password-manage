@@ -24,7 +24,7 @@
 - Keyboard navigation
 - Better contrast
 
----
+------
 
 ##  ANALYTICS & MONITORING
 
@@ -42,7 +42,7 @@
 - Har action log karo (who, what, when)
 - Export audit trail
 
----
+------
 
 ##  SECURITY ENHANCEMENTS
 
@@ -64,7 +64,7 @@
 #### 5. Device Fingerprinting
 - Unknown device se login → verify
 
----
+---------
 
 ##  MOBILE-FIRST IMPROVEMENTS
 
@@ -157,3 +157,93 @@
 ---
 
 **Choose karke batao kaun sa feature pehle add karun? Main code detail mein explain karunga!** 🚀
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+__Implement Team Invitation and Collaboration Features__
+
+__Objective:__ Add the ability for users to invite team members to their account, manage team access, and collaborate on password entries.
+
+__Requirements:__
+
+1. __Database Schema Updates:__
+
+   - Add `organizationId` and `role` fields to the User model (roles: owner, admin, member)
+   - Create new Organization model with fields: name, ownerId, createdAt
+   - Create Invitation model with fields: organizationId, email, role, status (pending/accepted/declined), invitedBy, expiresAt
+
+2. __API Endpoints:__
+
+   - `POST /api/teams/invite` - Send invitation (requires email, role)
+   - `GET /api/teams/members` - List team members
+   - `DELETE /api/teams/members/:id` - Remove team member
+   - `POST /api/teams/invite/:token/accept` - Accept invitation
+   - `POST /api/teams/invite/:token/decline` - Decline invitation
+
+3. __Frontend Updates:__
+
+   - Replace hardcoded team section in settings page with dynamic data
+   - Add "Invite Team Member" form with email input and role selection
+   - Show pending invitations with accept/decline buttons
+   - Display current team members with roles and remove options
+   - Add organization creation flow for new users
+
+4. __Security Considerations:__
+
+   - Only organization owners/admins can send invites
+   - Invitations expire after 7 days
+   - Prevent duplicate invitations to same email
+   - Team members inherit access to all entries (or implement granular permissions)
+
+5. __UI/UX:__
+
+   - Email invitation template with accept/decline links
+   - Loading states and error handling
+   - Toast notifications for invite actions
+   - Responsive design for mobile
+
+__Implementation Steps:__
+
+1. Update database models
+2. Create invitation API routes
+3. Update settings page with real functionality
+4. Add invitation acceptance flow
+5. Test team collaboration features

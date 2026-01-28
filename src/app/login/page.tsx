@@ -3,6 +3,7 @@
 import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { signIn } from "next-auth/react";
 import { checkPasswordStrength } from "@/lib/passwordStrength";
 
 function LoginContent() {
@@ -20,21 +21,33 @@ function LoginContent() {
     event.preventDefault();
     setMessage("");
     setLoading(true);
-    try {
-      const response = await fetch(`/api/auth/${mode === "login" ? "login" : "register"}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
 
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || "Auth failed");
+    try {
+      if (mode === "signup") {
+        const response = await fetch("/api/auth/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        });
+
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.message || "Registration failed");
+        }
+
+        setMode("login");
+        setMessage("Account created. Please sign in.");
+        return;
       }
 
-      const nextParam = searchParams.get("next");
-      const safeNext = nextParam && nextParam.startsWith("/") ? nextParam : "/vault";
-      router.push(safeNext);
+      const callbackUrl = searchParams.get("callbackUrl") || "/vault";
+      const result = await signIn("credentials", {
+        email,
+        password,
+        callbackUrl,
+      });
+
+      // NextAuth will handle the redirect automatically
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Auth failed");
     } finally {
