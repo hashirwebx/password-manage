@@ -216,13 +216,22 @@ export default function TeamSettingsPage() {
         method: 'DELETE',
       });
       
-      if (!res.ok) throw new Error('Failed to remove member');
+      const data = await res.json();
+      
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to remove member');
+      }
+      
+      // Show success message
+      setError('');
+      alert('Member removed successfully!');
       
       // Refresh the members list
       if (orgId) fetchTeamData(orgId);
       
     } catch (err: any) {
       setError(err.message || 'Failed to remove member');
+      alert(`Error: ${err.message || 'Failed to remove member'}`);
     } finally {
       setProcessing(false);
     }
